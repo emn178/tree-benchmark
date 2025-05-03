@@ -29,6 +29,21 @@ namespace :benchmark do
     end
   end
 
+  task children_of: :environment do
+    Benchmark.ips do |x|
+      x.report("ancestry") do
+        Node.all.each do |node|
+          Node.children_of(node.id)
+        end
+      end
+      x.report("awesome_nested_set") do
+        NestNode.all.each do |node|
+          NestNode.where(parent_id: node.id)
+        end
+      end
+    end
+  end
+
   task children: :environment do
     Benchmark.ips do |x|
       x.report("ancestry") do
@@ -44,21 +59,6 @@ namespace :benchmark do
     end
   end
 
-  task descendants: :environment do
-    Benchmark.ips do |x|
-      x.report("ancestry") do
-        Node.all.each do |node|
-          node.descendants
-        end
-      end
-      x.report("awesome_nested_set") do
-        NestNode.all.each do |node|
-          node.descendants
-        end
-      end
-    end
-  end
-
   task siblings: :environment do
     Benchmark.ips do |x|
       x.report("ancestry") do
@@ -69,6 +69,21 @@ namespace :benchmark do
       x.report("awesome_nested_set") do
         NestNode.all.each do |node|
           node.self_and_siblings
+        end
+      end
+    end
+  end
+
+  task descendants: :environment do
+    Benchmark.ips do |x|
+      x.report("ancestry") do
+        Node.all.each do |node|
+          node.descendants
+        end
+      end
+      x.report("awesome_nested_set") do
+        NestNode.all.each do |node|
+          node.descendants
         end
       end
     end
@@ -91,7 +106,7 @@ namespace :benchmark do
 
   task all: :environment do
     puts "---------------------------------"
-    %w[create children descendants siblings ancestors].each do |sub_task|
+    %w[create children_of children descendants siblings ancestors].each do |sub_task|
       task = "benchmark:#{sub_task}"
       puts task
       Rake::Task[task].invoke
