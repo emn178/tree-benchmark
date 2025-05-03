@@ -58,4 +58,5 @@ end
 
 gem "ancestry"
 gem "awesome_nested_set"
+gem "closure_tree"
 gem "benchmark-ips"

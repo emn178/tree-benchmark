@@ -14,9 +14,10 @@ end
 
 namespace :benchmark do
   task create: :environment do
-    [ Node, NestNode ].each do |model|
+    [ Node, NestNode, ClosureNode ].each do |model|
       ActiveRecord::Base.connection.execute("TRUNCATE TABLE #{model.table_name} RESTART IDENTITY CASCADE;")
     end
+    ActiveRecord::Base.connection.execute("TRUNCATE TABLE closure_node_hierarchies RESTART IDENTITY CASCADE;")
 
     Benchmark.ips do |x|
       x.config(warmup: 0)
@@ -25,6 +26,9 @@ namespace :benchmark do
       end
       x.report("awesome_nested_set") do
         create_data(NestNode.roots, 0)
+      end
+      x.report("closure_tree") do
+        create_data(ClosureNode.roots, 0)
       end
     end
   end
@@ -41,6 +45,11 @@ namespace :benchmark do
           NestNode.where(parent_id: node.id)
         end
       end
+      x.report("closure_tree") do
+        ClosureNode.all.each do |node|
+          ClosureNode.where(parent_id: node.id)
+        end
+      end
     end
   end
 
@@ -53,6 +62,11 @@ namespace :benchmark do
       end
       x.report("awesome_nested_set") do
         NestNode.all.each do |node|
+          node.children
+        end
+      end
+      x.report("closure_tree") do
+        ClosureNode.all.each do |node|
           node.children
         end
       end
@@ -71,6 +85,11 @@ namespace :benchmark do
           node.self_and_siblings
         end
       end
+      x.report("closure_tree") do
+        ClosureNode.all.each do |node|
+          node.self_and_siblings
+        end
+      end
     end
   end
 
@@ -86,6 +105,11 @@ namespace :benchmark do
           node.descendants
         end
       end
+      x.report("closure_tree") do
+        ClosureNode.all.each do |node|
+          node.descendants
+        end
+      end
     end
   end
 
@@ -98,6 +122,11 @@ namespace :benchmark do
       end
       x.report("awesome_nested_set") do
         NestNode.all.each do |node|
+          node.ancestors
+        end
+      end
+      x.report("closure_tree") do
+        ClosureNode.all.each do |node|
           node.ancestors
         end
       end

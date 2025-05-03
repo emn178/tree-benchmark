@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_04_20_082803) do
+ActiveRecord::Schema[8.0].define(version: 2025_05_03_132015) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "closure_node_hierarchies", id: false, force: :cascade do |t|
+    t.integer "ancestor_id", null: false
+    t.integer "descendant_id", null: false
+    t.integer "generations", null: false
+    t.index ["ancestor_id", "descendant_id", "generations"], name: "closure_node_anc_desc_idx", unique: true
+    t.index ["descendant_id"], name: "closure_node_desc_idx"
+  end
+
+  create_table "closure_nodes", force: :cascade do |t|
+    t.string "name", null: false
+    t.bigint "parent_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["parent_id"], name: "index_closure_nodes_on_parent_id"
+  end
 
   create_table "nest_nodes", force: :cascade do |t|
     t.string "name", null: false
