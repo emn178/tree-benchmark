@@ -12,6 +12,21 @@ def create_data(nodes, depth)
   end
 end
 
+def update_data(nodes)
+  ActiveRecord::Base.transaction do
+    i = 0
+    while i < nodes.size - 1
+      nodes[i].reload
+      nodes[i].update!(parent: nodes[i + 1].descendants.last)
+      i += 1
+    end
+    nodes.each do |node|
+      node.reload
+      node.update!(parent: nil)
+    end
+  end
+end
+
 namespace :benchmark do
   task create: :environment do
     [ Node, NestNode, ClosureNode ].each do |model|
@@ -29,6 +44,21 @@ namespace :benchmark do
       end
       x.report("closure_tree") do
         create_data(ClosureNode.roots, 0)
+      end
+    end
+  end
+
+  task update: :environment do
+    Benchmark.ips do |x|
+      x.config(warmup: 0)
+      x.report("ancestry") do
+        update_data(Node.roots.to_a)
+      end
+      x.report("awesome_nested_set") do
+        update_data(NestNode.roots.to_a)
+      end
+      x.report("closure_tree") do
+        update_data(ClosureNode.roots.to_a)
       end
     end
   end
@@ -140,7 +170,7 @@ namespace :benchmark do
 
   task all: :environment do
     puts "---------------------------------"
-    %w[create children_of children descendants siblings ancestors].each do |sub_task|
+    %w[create update children_of children descendants siblings ancestors].each do |sub_task|
       task = "benchmark:#{sub_task}"
       puts task
       Rake::Task[task].invoke
