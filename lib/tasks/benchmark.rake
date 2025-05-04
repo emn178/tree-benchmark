@@ -40,6 +40,11 @@ namespace :benchmark do
           Node.children_of(node.id)
         end
       end
+      x.report("ancestry (faster)") do
+        Node.all.each do |node|
+          Node.children_of_by_id(node.id)
+        end
+      end
       x.report("awesome_nested_set") do
         NestNode.all.each do |node|
           NestNode.where(parent_id: node.id)
